@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="th"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kuroko OTP Center v7</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://alcdn.msauth.net/browser/2.38.4/js/msal-browser.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:16px;background:#f4f0fc;color:#28213b;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:590px;margin:auto}header{background:linear-gradient(120deg,#5b35a1,#9164d1);color:#fff;border-radius:18px;padding:24px;margin-bottom:14px}.card{background:#fff;border-radius:16px;padding:17px;margin-bottom:12px;box-shadow:0 2px 10px #2b164b10}h1{margin:7px 0}h2{font-size:18px;margin:0 0 12px}label{display:block;font-size:13px;font-weight:600;margin:10px 0 5px}input,select,textarea{width:100%;font-size:16px;padding:11px;border:1px solid #d8cbed;border-radius:9px;background:white;color:#29243a}button{border:0;background:#7044b5;color:#fff;border-radius:10px;padding:12px;font-size:15px;font-weight:600;cursor:pointer;margin:5px 0}button.alt{background:#eee7f8;color:#54318b}button:disabled{opacity:.5} .buttons{display:grid;grid-template-columns:1fr 1fr;gap:7px}.buttons button{width:100%}.email{background:#f1ebfb;border-radius:10px;padding:12px;overflow-wrap:anywhere;font-weight:700;color:#593394}.small{font-size:12px;line-height:1.55;color:#716780}.message{border-top:1px solid #eee;padding:12px 0}.code{font-size:25px;font-weight:800;letter-spacing:3px;color:#6235ae}.status{border-radius:9px;background:#f2f0f8;padding:10px;font-size:13px;margin-top:8px;overflow-wrap:anywhere}.row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.row button{flex-shrink:0}.pill{font-size:12px;background:#ebe6f6;padding:3px 8px;border-radius:10px}code{overflow-wrap:anywhere}
+</style></head><body><main>
+<header><div>KUROKO STREET RIVALS</div><h1>Login Manager · OTP Center v7</h1><div>Gmail / Hotmail · อ่านเฉพาะเมื่อกดตรวจสอบ</div></header>
+<section class="card"><h2>1. ตั้งค่าอีเมลที่ใช้รีไอดี</h2>
+<label>อีเมลหลัก</label><input id="baseEmail" type="email" placeholder="yourname@gmail.com" autocomplete="off">
+<label>หมายเลขรอบ (0 = อีเมลปกติ)</label><input id="index" type="number" min="0" step="1" value="1">
+<div class="email" id="currentEmail">กรอกอีเมลหลัก</div>
+<div class="buttons"><button id="copyEmail">คัดลอกอีเมล</button><button id="nextEmail" class="alt">รอบถัดไป +1</button></div>
+<div class="buttons"><button id="openGame" class="alt">เปิดเกมผ่าน Shortcuts</button><button id="openInbox" class="alt">เปิดกล่องจดหมาย</button></div>
+<div class="small">ต้องสร้าง Shortcut ชื่อ “เปิดเกม Kuroko” ไว้แล้ว · ข้อมูลอีเมลหลักและหมายเลขรอบเก็บเฉพาะในเบราว์เซอร์</div>
+</section>
+<section class="card"><h2>2. ตั้งค่า OAuth Client ID</h2>
+<label>Google OAuth Client ID (สำหรับ Gmail)</label><input id="googleClient" placeholder="...apps.googleusercontent.com" autocomplete="off" spellcheck="false">
+<label>Microsoft Application (client) ID (สำหรับ Hotmail/Outlook)</label><input id="msClient" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+<div class="small">Client ID เป็นตัวระบุแอปแบบสาธารณะ ไม่ใช่รหัสผ่านหรือ client secret · กรอกเฉพาะผู้ให้บริการที่ต้องการใช้ · ต้องลงทะเบียน URL ของเว็บนี้กับผู้ให้บริการ</div>
+</section>
+<section class="card"><h2>3. เชื่อมกล่องอีเมล</h2>
+<div class="buttons"><button id="googleLogin">เชื่อม Gmail</button><button id="msLogin">เชื่อม Hotmail</button></div>
+<div class="buttons"><button id="checkMail">ตรวจสอบอีเมลล่าสุด</button><button id="disconnect" class="alt">ตัดการเชื่อมต่อ</button></div>
+<div class="status" id="status" role="status">ยังไม่ได้เชื่อมกล่องจดหมาย</div>
+<p class="small">กดตรวจสอบเมื่อคาดว่า OTP ส่งมาถึงแล้ว (ไม่มีการอ่านอีเมลเบื้องหลัง) โปรแกรมแสดงเฉพาะ 10 ข้อความล่าสุดใน 24 ชั่วโมง และค้นหารหัส 4–8 หลักจากข้อความสั้น อาจพบตัวเลขที่ไม่ใช่ OTP ได้ จึงต้องตรวจสอบผู้ส่งด้วยตัวเอง</p>
+<div id="messages"></div>
+</section>
+<section class="card"><h2>4. บันทึกผลสุ่ม</h2><label>ตัวละคร</label><input id="character" placeholder="ชื่อตัวละคร"><label>หมายเหตุ</label><textarea id="note" rows="2"></textarea>
+<div class="buttons"><button id="keep">เก็บไอดี</button><button id="skip" class="alt">รีรอบถัดไป</button></div><div id="history"></div><button id="export" class="alt">สำรองประวัติเป็น JSON</button>
+<p class="small">ไม่บันทึกเนื้อหาอีเมล OTP รหัส OTP หรือ access token ลงในประวัติ</p></section>
+</main><script>
+'use strict';
+const $=id=>document.getElementById(id);
+const KEY='kuroko-otp-center-v7-settings';
+const state={baseEmail:'',index:1,history:[]};
+try{const saved=JSON.parse(localStorage.getItem(KEY));if(saved&&typeof saved==='object'){
+ state.baseEmail=typeof saved.baseEmail==='string'?saved.baseEmail:'';
+ state.index=Number.isSafeInteger(saved.index)&&saved.index>=0?saved.index:1;
+ state.history=Array.isArray(saved.history)?saved.history:[];
+}}catch{}
+$('baseEmail').value=state.baseEmail;$('index').value=state.index;
+let provider=null,googleToken=null,msalClient=null,msAccount=null;
+function status(s){$('status').textContent=s}
+function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function email(){let v=state.baseEmail.trim(),i=state.index,p=v.split('@');return p.length===2&&p[0]&&p[1]&&Number.isSafeInteger(i)&&i>=0?(i===0?v:p[0]+'+'+i+'@'+p[1]):''}
+function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
+function render(){ $('currentEmail').textContent=email()||'กรอกอีเมลหลัก';
+ $('history').innerHTML=state.history.map(h=>'<div class="message"><strong>'+ (h.keep?'⭐ เก็บ':'↻ รีใหม่')+'</strong> · '+safe(h.email)+'<div>'+safe(h.character||'ไม่ระบุ')+'</div><div class="small">'+safe(h.date)+' · '+safe(h.note)+'</div></div>').join(''); }
+$('baseEmail').addEventListener('input',()=>{state.baseEmail=$('baseEmail').value;save()});
+$('index').addEventListener('input',()=>{const n=Number($('index').value);if(Number.isSafeInteger(n)&&n>=0){state.index=n;save()}});
+$('nextEmail').onclick=()=>{state.index++;$('index').value=state.index;save()};
+$('copyEmail').onclick=async()=>{if(!email()){status('กรุณากรอกอีเมลก่อน');return}try{await navigator.clipboard.writeText(email());status('คัดลอกอีเมลแล้ว: '+email())}catch{prompt('คัดลอกอีเมล',email())}};
+$('openGame').onclick=()=>{location.href='shortcuts://run-shortcut?name='+encodeURIComponent('เปิดเกม Kuroko')};
+$('openInbox').onclick=()=>{const d=state.baseEmail.split('@')[1]?.toLowerCase();window.open(d==='gmail.com'||d==='googlemail.com'?'https://mail.google.com/':'https://outlook.live.com/mail/','_blank','noopener')};
+function addResult(keep){if(!email()){status('กรอกอีเมลก่อน');return}state.history.unshift({email:email(),character:$('character').value.trim(),note:$('note').value.trim(),keep,date:new Date().toLocaleString('th-TH')});state.index++;$('index').value=state.index;$('character').value='';$('note').value='';save();status('บันทึกแล้ว เตรียมอีเมล '+(email()||'')+' สำหรับรอบถัดไป')}
+$('keep').onclick=()=>addResult(true);$('skip').onclick=()=>addResult(false);
+$('export').onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='kuroko-history.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+function getGoogleClient(){const id=$('googleClient').value.trim();if(!id.endsWith('.apps.googleusercontent.com'))throw Error('กรอก Google OAuth Client ID ที่ถูกต้อง');if(!window.google?.accounts?.oauth2)throw Error('Google Identity Services ยังโหลดไม่สำเร็จ');return id}
+$('googleLogin').onclick=()=>{try{const client=google.accounts.oauth2.initTokenClient({client_id:getGoogleClient(),scope:'https://www.googleapis.com/auth/gmail.readonly',callback:r=>{if(r.error){status('Gmail OAuth: '+r.error);return}googleToken=r.access_token;provider='google';status('เชื่อม Gmail แล้ว กดตรวจสอบอีเมลล่าสุดได้')}});client.requestAccessToken({prompt:'consent'})}catch(e){status(e.message)}};
+async function initMsal(){const id=$('msClient').value.trim();if(!/^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(id))throw Error('กรอก Microsoft Application ID ให้ถูกต้อง');if(!window.msal)throw Error('โหลด MSAL ไม่สำเร็จ');if(!msalClient||msalClient.config.auth.clientId!==id){msalClient=new msal.PublicClientApplication({auth:{clientId:id,authority:'https://login.microsoftonline.com/consumers',redirectUri:location.origin+location.pathname},cache:{cacheLocation:'sessionStorage',storeAuthStateInCookie:false}});await msalClient.handleRedirectPromise()}return msalClient}
+const MS_SCOPES=['Mail.Read'];
+$('msLogin').onclick=async()=>{try{const app=await initMsal();const result=await app.loginPopup({scopes:MS_SCOPES,prompt:'select_account'});msAccount=result.account;provider='microsoft';status('เชื่อม Hotmail/Outlook แล้ว กดตรวจสอบอีเมลล่าสุดได้')}catch(e){status('Microsoft login: '+(e.errorMessage||e.message)+' · หาก popup ถูกบล็อก ให้เปิดเว็บใน Safari โดยตรง')}};
+$('disconnect').onclick=async()=>{if(googleToken&&window.google?.accounts?.oauth2)google.accounts.oauth2.revoke(googleToken,()=>{});googleToken=null;provider=null;msAccount=null;if(msalClient){try{await msalClient.clearCache()}catch{}}$('messages').replaceChildren();status('ตัดการเชื่อมต่อในหน้านี้แล้ว')};
+async function api(url,token){const res=await fetch(url,{headers:{Authorization:'Bearer '+token}});if(!res.ok)throw Error('HTTP '+res.status+': '+(await res.text()).slice(0,180));return res.json()}
+function extractCode(text){const m=String(text||'').match(/(?:^|\D)(\d{4,8})(?!\d)/);return m?m[1]:null}
+function showMessages(list){const target=$('messages');target.replaceChildren();if(!list.length){target.textContent='ไม่พบอีเมลล่าสุดในช่วง 24 ชั่วโมง';return}list.forEach(x=>{const wrap=document.createElement('div');wrap.className='message';const title=document.createElement('div');title.textContent=(x.from||'ไม่ทราบผู้ส่ง')+' · '+(x.subject||'ไม่มีหัวข้อ');wrap.append(title);const small=document.createElement('div');small.className='small';small.textContent=x.date||'';wrap.append(small);if(x.code){const code=document.createElement('div');code.className='code';code.textContent=x.code;wrap.append(code);const btn=document.createElement('button');btn.className='alt';btn.textContent='คัดลอกรหัส';btn.onclick=()=>navigator.clipboard.writeText(x.code).then(()=>status('คัดลอกรหัสแล้ว')).catch(()=>prompt('คัดลอกรหัส',x.code));wrap.append(btn)}else{const s=document.createElement('div');s.className='small';s.textContent='ไม่พบตัวเลข 4–8 หลักในข้อความย่อ';wrap.append(s)}target.append(wrap)})}
+async function gmailMessages(){if(!googleToken)throw Error('กรุณาเชื่อม Gmail อีกครั้ง');const query=encodeURIComponent('newer_than:1d');const root='https://gmail.googleapis.com/gmail/v1/users/me/messages';const list=await api(root+'?maxResults=10&q='+query,googleToken);const details=await Promise.all((list.messages||[]).map(m=>api(root+'/'+encodeURIComponent(m.id)+'?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date',googleToken)));return details.map(d=>{const h=Object.fromEntries((d.payload?.headers||[]).map(x=>[x.name.toLowerCase(),x.value]));return {from:h.from,subject:h.subject,date:h.date,code:extractCode(d.snippet)}})}
+async function microsoftMessages(){if(!msalClient||!msAccount)throw Error('กรุณาเชื่อม Hotmail อีกครั้ง');const auth=await msalClient.acquireTokenSilent({scopes:MS_SCOPES,account:msAccount});const cut=new Date(Date.now()-24*3600*1000).toISOString();const p=new URLSearchParams({'$top':'10','$orderby':'receivedDateTime desc','$filter':'receivedDateTime ge '+cut,'$select':'from,subject,receivedDateTime,bodyPreview'});const json=await api('https://graph.microsoft.com/v1.0/me/messages?'+p.toString(),auth.accessToken);return (json.value||[]).map(m=>({from:m.from?.emailAddress?.address,subject:m.subject,date:m.receivedDateTime,code:extractCode(m.bodyPreview)}))}
+$('checkMail').onclick=async()=>{try{status('กำลังตรวจสอบอีเมลล่าสุด…');const list=provider==='google'?await gmailMessages():provider==='microsoft'?await microsoftMessages():null;if(!list)throw Error('กรุณาเชื่อม Gmail หรือ Hotmail ก่อน');showMessages(list);status('ตรวจสอบเสร็จ '+list.length+' ข้อความ · ตรวจชื่อผู้ส่งก่อนใช้ OTP')}catch(e){status('อ่านอีเมลไม่สำเร็จ: '+e.message)}};
+render();
+</script></body></html>
